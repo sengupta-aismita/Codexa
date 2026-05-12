@@ -65,7 +65,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="h-screen relative overflow-hidden bg-gradient-to-br from-black via-[#070B14] to-[#0F172A] flex items-center justify-center px-4">
+    <div className="h-svh relative overflow-hidden bg-gradient-to-br from-black via-[#070B14] to-[#0F172A] flex items-center justify-center px-4">
       {/* BACKGROUND GLOW */}
       <div className="absolute w-72 h-72 bg-indigo-500/20 blur-3xl rounded-full top-10 left-[-80px]" />
       <div className="absolute w-72 h-72 bg-violet-500/20 blur-3xl rounded-full bottom-10 right-[-80px]" />

@@ -156,7 +156,7 @@ const Chat = () => {
 }, [messages, loading]);
 
   return (
-    <div className="h-screen bg-[#070B14] text-white flex overflow-hidden">
+    <div className="h-svh bg-[#070B14] text-white flex overflow-hidden">
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
