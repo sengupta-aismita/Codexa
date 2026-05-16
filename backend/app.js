@@ -16,7 +16,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Authorization", "Content-Type"],
@@ -27,9 +27,11 @@ app.use(helmet());
 import healthCheckRouter from "./src/routes/healthcheck.routes.js";
 import authRouter from "./src/routes/auth.routes.js";
 import aiRouter from "./src/routes/ai.routes.js";
+import documentRoutes from "./src/routes/document.routes.js"
 
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/ai", aiRouter);
+app.use("/api/v1/documents", documentRoutes);
 
 export default app;

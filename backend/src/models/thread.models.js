@@ -39,4 +39,8 @@ const ThreadSchema = new mongoose.Schema(
   },
 );
 
+ThreadSchema.index({
+  title:"text",
+  "messages.content":"text",
+})
 export default mongoose.model("Thread", ThreadSchema);

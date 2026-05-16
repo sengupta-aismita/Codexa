@@ -98,3 +98,36 @@ export const deleteThread = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Thread deleted successfully"));
 });
+
+
+export const searchThreads = asyncHandler(async(req,res)=>{
+    try{
+      const {query} = req.query;
+      const userId = req.user._id;
+
+      if(!query || query.trim()=== ""){
+        throw new ApiError(400,"Search query required");
+      }
+
+      const threads = await Thread.find({
+        user:userId,
+        $text:{
+          $search: query,
+        }
+      },{
+        score:{$meta: "textScore"}
+      })
+      .sort({
+        score: {$meta: "textScore"}
+      })
+      .select("title updatedAt");
+
+      res.status(200).json(new ApiResponse(200,threads,"Successful searching"))
+
+    }catch(err){
+      console.error(err);
+      throw new ApiError(500,"Server error")
+      
+
+    }
+})
