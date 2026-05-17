@@ -19,6 +19,10 @@ const documentSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
+         embedding: {
+          type: [Number],
+          required: true,
+        },
       },
     ],
   },
