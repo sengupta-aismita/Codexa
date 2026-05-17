@@ -1,5 +1,5 @@
 import React from "react";
-import { Send, FileText } from "lucide-react";
+import { Send, FileText , LoaderCircle} from "lucide-react";
 
 const ChatInput = ({
   handleSend,
@@ -51,7 +51,14 @@ const ChatInput = ({
           {/* PDF Upload */}
           {chatMode === "rag" && (
             <label className="cursor-pointer shrink-0 bg-[#0F172A] border border-[#1E293B] rounded-2xl px-4 py-4 hover:border-indigo-500 transition flex items-center justify-center gap-2">
-              <FileText size={18} />
+              {uploading ? (
+                <LoaderCircle
+                  size={18}
+                  className="animate-spin text-indigo-400"
+                />
+              ) : (
+                <FileText size={18} />
+              )}
 
               <span className="hidden md:inline text-sm">
                 {uploading ? "Uploading..." : "Upload PDF"}
@@ -61,6 +68,7 @@ const ChatInput = ({
                 type="file"
                 accept=".pdf"
                 hidden
+                disabled={uploading}
                 onChange={handlePdfUpload}
               />
             </label>
@@ -70,9 +78,7 @@ const ChatInput = ({
           <input
             type="text"
             placeholder={
-              chatMode === "rag"
-                ? "Ask your PDF..."
-                : "Ask Codexa something..."
+              chatMode === "rag" ? "Ask your PDF..." : "Ask Codexa something..."
             }
             value={message}
             onChange={(e) => setMessage(e.target.value)}
