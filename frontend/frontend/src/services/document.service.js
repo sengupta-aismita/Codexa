@@ -14,9 +14,9 @@ export const uploadDocument = async (formData) => {
   return response.data;
 };
 
-export const askDocument = async (question) => {
+export const askDocument = async (question, threadId) => {
   const response = await API.post("/documents/ask", {
-    question,
+    question, threadId
   });
 
   return response.data;

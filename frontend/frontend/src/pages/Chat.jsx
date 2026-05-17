@@ -45,125 +45,135 @@ const Chat = () => {
   };
 
   const handlePdfUpload = async (e) => {
-    const file = e.target.files[0];
+  const file = e.target.files[0];
 
-    if (!file) return;
+  if (!file) return;
 
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are allowed");
-      return;
-    }
+  if (file.type !== "application/pdf") {
+    toast.error("Only PDF files are allowed");
+    return;
+  }
 
-    try {
-      setUploading(true);
+  try {
+    setUploading(true);
 
-      const formData = new FormData();
-      formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-      await uploadDocument(formData);
+    await uploadDocument(formData);
 
-      setDocumentReady(true);
-      setUploadedFileName(file.name);
+    setDocumentReady(true);
+    setUploadedFileName(file.name);
 
-      toast.success("PDF ready for questioning");
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "PDF upload failed"
-      );
-    } finally {
-      setUploading(false);
-    }
+    toast.success("PDF ready for questioning");
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "PDF upload failed"
+    );
+  } finally {
+    setUploading(false);
+  }
+};
+
+const handleSend = async () => {
+  if (!message.trim()) return;
+
+  if (chatMode === "rag" && !documentReady) {
+    toast.error("Upload a PDF first");
+    return;
+  }
+
+  const currentMessage = message;
+
+  const userMessage = {
+    role: "user",
+    content: currentMessage,
   };
 
-  const handleSend = async () => {
-    if (!message.trim()) return;
+  setMessages((prev) => [...prev, userMessage]);
+  setMessage("");
 
-    if (chatMode === "rag" && !documentReady) {
-      toast.error("Upload a PDF first");
-      return;
+  try {
+    setLoading(true);
+
+    let aiReply = "";
+    let sources = [];
+
+    if (chatMode === "general") {
+      const response = await API.post("/ai/message", {
+        threadId,
+        message: currentMessage,
+      });
+
+      if (!threadId) {
+        setThreadId(response.data.data.threadId);
+      }
+
+      aiReply = response.data.data.reply;
+
+      await fetchThreads();
     }
 
-    const currentMessage = message;
+    if (chatMode === "rag") {
+      const response = await askDocument(
+        currentMessage,
+        threadId
+      );
 
-    const userMessage = {
-      role: "user",
-      content: currentMessage,
+      if (!threadId && response.data.threadId) {
+        setThreadId(response.data.threadId);
+      }
+
+      aiReply = response.data.answer;
+      sources = response.data.sources || [];
+
+      await fetchThreads();
+    }
+
+    const aiMessage = {
+      role: "assistant",
+      content: aiReply,
+      sources,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setMessage("");
+    setMessages((prev) => [...prev, aiMessage]);
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message ||
+        "AI couldn't generate a response"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      setLoading(true);
+const handleNewChat = () => {
+  setMessages([]);
+  setThreadId(null);
+  setDocumentReady(false);
+  setUploadedFileName("");
+  setChatMode("general");
+};
 
-      let aiReply = "";
-      let sources = [];
+const handleLogout = async () => {
+  try {
+    await logoutUser();
+    toast.success("Logged out successfully");
+  } catch {
+    toast.error("Logout failed");
+  } finally {
+    navigate("/login");
+  }
+};
 
-      if (chatMode === "general") {
-        const response = await API.post("/ai/message", {
-          threadId,
-          message: currentMessage,
-        });
-
-        if (!threadId) {
-          setThreadId(response.data.data.threadId);
-        }
-
-        aiReply = response.data.data.reply;
-        await fetchThreads();
-      }
-
-      if (chatMode === "rag") {
-        const response = await askDocument(currentMessage);
-
-        aiReply = response.data.answer;
-        sources = response.data.sources;
-      }
-
-      const aiMessage = {
-        role: "assistant",
-        content: aiReply,
-        sources,
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "AI couldn't generate a response"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleNewChat = () => {
-    setMessages([]);
-    setThreadId(null);
-    setDocumentReady(false);
-    setUploadedFileName("");
-    setChatMode("general");
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      toast.success("Logged out successfully");
-    } catch {
-      toast.error("Logout failed");
-    } finally {
-      navigate("/login");
-    }
-  };
-
-  const fetchThreads = async () => {
-    try {
-      const response = await getThreads();
-      setThreads(response.data);
-    } catch {
-      toast.error("Couldn't load recent chats");
-    }
-  };
+const fetchThreads = async () => {
+  try {
+    const response = await getThreads();
+    setThreads(response.data);
+  } catch {
+    toast.error("Couldn't load recent chats");
+  }
+};
 
   const handleThreadClick = async (thread) => {
     try {
@@ -179,9 +189,7 @@ const Chat = () => {
     try {
       await deleteThread(threadId);
 
-      setThreads((prev) =>
-        prev.filter((thread) => thread._id !== threadId)
-      );
+      setThreads((prev) => prev.filter((thread) => thread._id !== threadId));
 
       toast.success("Chat deleted");
     } catch {
